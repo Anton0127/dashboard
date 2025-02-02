@@ -1,0 +1,86 @@
+body {
+    font-family: Arial, sans-serif;
+    background: url('https://source.unsplash.com/1600x900/?technology,factory,industry') no-repeat center center fixed;
+    background-size: cover;
+    text-align: center;
+    color: white;
+}
+
+.container {
+    max-width: 900px;
+    margin: 20px auto;
+    background: rgba(255, 255, 255, 0.9); /* Transparansi untuk efek elegan */
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    color: black;
+}
+
+.logo-container img {
+    width: 150px;
+    margin-bottom: 10px;
+}
+
+h1 {
+    color: #333;
+}
+
+.status-container {
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    margin-top: 20px;
+}
+
+.card {
+    background: #f9f9f9;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    width: 200px;
+}
+
+.card i {
+    font-size: 50px;
+    margin-bottom: 10px;
+}
+
+.card p {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.buttons {
+    margin-top: 20px;
+}
+
+button {
+    padding: 10px 20px;
+    font-size: 16px;
+    margin: 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    background: #2A5298;
+    color: white;
+}
+
+button:hover {
+    opacity: 0.8;
+}
+
+.history-table {
+    width: 100%;
+    margin-top: 20px;
+    border-collapse: collapse;
+}
+
+.history-table th, .history-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+}
+
+.history-table th {
+    background: #eee;
+}

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Operator</title>
+    <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; background: #f0f0f0; padding: 20px; }
+        .card { display: inline-block; padding: 20px; margin: 10px; border-radius: 10px; color: white; min-width: 150px; font-size: 24px; }
+        #status { background: #4CAF50; }
+        #speed { background: #2196F3; }
+        #counter { background: #9C27B0; }
+        #oilAlarm { background: #FF5722; }
+        button { padding: 15px 25px; font-size: 18px; cursor: pointer; margin-top: 20px; }
+        #notification {
+            font-size: 22px; font-weight: bold; margin-top: 20px;
+            padding: 15px; display: none; color: white; background: orange;
+            border-radius: 10px;
+        }
+        @keyframes blink {
+            from { background: red; }
+            to { background: yellow; color: black; }
+        }
+        .history-container {
+        display: flex;
+        justify-content: space-around;
+        flex-wrap: wrap;
+        margin-top: 20px;
+    }
+    .history-table {
+        width: 45%;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+    }
+    th, td {
+        border: 1px solid black;
+        padding: 8px;
+        text-align: center;
+    }
+    th {
+        background: #ddd;
+    }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo-container">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Logo_2024_Perum_Peruri.svg/1200px-Logo_2024_Perum_Peruri.svg.png" alt="Perum Peruri">
+        </div>
+        <h1>Dashboard Operator</h1>
+
+        <div class="status-container">
+            <div class="card" id="status">
+                <i class="fas fa-industry"></i>
+                <p>Status: <span>OFF</span></p>
+            </div>
+            <div class="card" id="speed">
+                <i class="fas fa-tachometer-alt"></i>
+                <p>Speed: <span>0 SPM</span></p>
+            </div>
+            <div class="card" id="counter">
+                <i class="fas fa-calculator"></i>
+                <p>Counter: <span>0</span></p>
+            </div>
+            <div class="card" id="oilAlarm">
+                <i class="fas fa-oil-can"></i>
+                <p>Oil Status: <span>Normal</span></p>
+            </div>
+        </div>
+
+        <div class="buttons">
+            <button onclick="callTechnician()">🚨 Panggil Teknisi</button>
+            <button onclick="finishJob()">✅ Pekerjaan Selesai</button>
+        </div>
+
+        <p id="notification"></p>
+
+         <!-- Tabel History Pemanggilan -->
+    <div class="history-container">
+        <!-- Tabel History Pemanggilan -->
+        <div class="history-table">
+            <h3>History Pemanggilan</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Waktu</th>
+                        <th>Keterangan</th>
+                    </tr>
+                </thead>
+                <tbody id="callHistory"></tbody>
+            </table>
+        </div>
+    
+        <!-- Tabel History Perbaikan -->
+        <div class="history-table">
+            <h3>History Perbaikan</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Waktu</th>
+                        <th>Keterangan</th>
+                    </tr>
+                </thead>
+                <tbody id="repairHistory"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="operator.js"></script>
+
+    <p id="notification"></p>
+    <audio id="alertSound" src="https://www.fesliyanstudios.com/play-mp3/4380"></audio>
+
+    <script>
+       const socket = io('http://localhost:3000');
+
+function callTechnician() {
+    socket.emit('callTechnician');
+    showNotification("📡 Memanggil teknisi...", "orange");
+}
+
+function finishJob() {
+    socket.emit('finishJob');
+
+    // Hapus notifikasi "Teknisi dalam perjalanan" dan ganti dengan "Pekerjaan Selesai" selama 10 detik
+    showNotification("✅ Pekerjaan Selesai!", "blue", true, 10000);
+}
+
+socket.on('notifyOperator', (message) => {
+    console.log('🔔 Notifikasi dari teknisi:', message);
+
+    // Jika "Teknisi dalam perjalanan", pastikan tetap muncul sampai "Pekerjaan Selesai" ditekan
+    if (message.includes("Teknisi dalam perjalanan")) {
+        showNotification(message, "green", false); // Tidak hilang otomatis
+    } else {
+        showNotification(message, "green"); // Notifikasi lain tetap bisa hilang otomatis
+    }
+});
+
+socket.on('updateData', (data) => {
+            console.log('📡 Received machine data:', data);
+            document.getElementById("status").textContent = data.status;
+            document.getElementById("speed").textContent = data.speed + " SPM";
+            document.getElementById("counter").textContent = data.counter + " Counter";
+            document.getElementById("oilAlarm").textContent = data.oilAlarm ? "GANTI OIL BROO" : "Oil Normal";
+        });
+
+socket.on('updateCallStatus', (statusData) => {
+        console.log("📜 Update history diterima:", statusData);
+        updateTable("callHistory", statusData.callHistory);
+        updateTable("repairHistory", statusData.repairHistory);
+    });
+
+function showNotification(message, color, autoHide = true, duration = 5000) {
+    const notif = document.getElementById("notification");
+    notif.textContent = message;
+    notif.style.display = "block";
+    notif.style.background = color;
+
+    // Hanya sembunyikan jika autoHide diaktifkan dan bukan "Teknisi dalam perjalanan"
+    if (autoHide) {
+        setTimeout(() => {
+            if (!notif.textContent.includes("Teknisi dalam perjalanan")) {
+                notif.style.display = "none";
+            }
+        }, duration);
+    }
+}
+
+function updateTable(tableId, data) {
+        const table = document.getElementById(tableId);
+        table.innerHTML = ""; // Kosongkan tabel sebelum update
+        data.forEach(entry => {
+            const row = `<tr><td>${entry.timestamp}</td><td>${entry.message}</td></tr>`;
+            table.innerHTML += row;
+        });
+    }
+
+    </script>
+</body>
+</html>
